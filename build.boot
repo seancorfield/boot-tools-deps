@@ -22,6 +22,7 @@
 
 (deftask deploy
   "Build and deploy the project."
+  []
   (comp (pom) (jar) (push)))
 
 (require '[boot-tools-deps.core :refer [deps]])
