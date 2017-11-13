@@ -1,5 +1,5 @@
-(def project 'boot-tools-deps)
-(def version "0.1.0")
+(def project 'seancorfield/boot-tools-deps)
+(def version "0.1.1")
 
 (set-env! :resource-paths #{"src"}
           :dependencies   '[[org.clojure/clojure "RELEASE"]
@@ -10,8 +10,8 @@
  pom {:project     project
       :version     version
       :description "A Boot task that reads deps.edn file using tools.deps"
-      :url         "https://github.com/seancorfield/boot-deps"
-      :scm         {:url "https://github.com/seancorfield/boot-deps"}
+      :url         "https://github.com/seancorfield/boot-tools-deps"
+      :scm         {:url "https://github.com/seancorfield/boot-tools-deps"}
       :license     {"Eclipse Public License"
                     "http://www.eclipse.org/legal/epl-v10.html"}})
 

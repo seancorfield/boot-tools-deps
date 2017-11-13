@@ -6,7 +6,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` file's `:dependencies`:
 
-    [boot-tools-deps "0.1.0"]
+    [seancorfield/boot-tools-deps "0.1.1"]
 
 and then expose the task with:
 
@@ -14,7 +14,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d boot-tools-deps:0.1.0 ...
+    boot -d seancorfield/boot-tools-deps:0.1.1 ...
 
 The available arguments are:
 
