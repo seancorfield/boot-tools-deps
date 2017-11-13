@@ -27,24 +27,17 @@
                      (select-keys info [:scope :exclusions])))
     deps))
 
-(deftask deps
-  "Use tools.deps to read and resolve the specified deps.edn files.
+(defn load-deps
+  "Functional version of the deps task.
 
-  The dependencies read in are added to your Boot :dependencies vector.
-
-  With the exception of -r and -v, the arguments are intended to match
-  the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main)."
-  [c config-paths    PATH [str] "the list of deps.edn files to read"
-   C classpath-aliases KW [kw]  "the list of classpath aliases to use"
-   R resolve-aliases   KW [kw]  "the list of resolve aliases to use"
-   r repeatable           bool  "Exclude ~/.clojure/deps.edn for a repeatable build"
-   v verbose              bool  "Be verbose (and ask tools.deps to be verbose too)"]
+  Can be called from other Boot code as needed."
+  [{:keys [config-paths classpath-aliases resolve-aliases repeatable verbose]}]
   (let [home-dir     (get (System/getenv) "HOME")
-        deps-files (cond->> ["deps.edn"]
-                       (seq config-paths)
-                       (into config-paths)
-                       (and home-dir (not repeatable))
-                       (into [(str home-dir "/.clojure/deps.edn")]))
+        deps-files   (cond->> ["deps.edn"]
+                         (seq config-paths)
+                         (into config-paths)
+                         (and home-dir (not repeatable))
+                         (into [(str home-dir "/.clojure/deps.edn")]))
         _            (when verbose
                        (println "Looking for these deps.edn files:")
                        (pp/pprint deps-files)
@@ -79,5 +72,23 @@
                                       (:extra-paths cp-args)))]
       (when verbose
         (println "And these :source-paths (:extra-paths): " paths))
-      (boot/merge-env! :source-paths paths))
-    identity))
+      (boot/merge-env! :source-paths paths))))
+
+(deftask deps
+  "Use tools.deps to read and resolve the specified deps.edn files.
+
+  The dependencies read in are added to your Boot :dependencies vector.
+
+  With the exception of -r and -v, the arguments are intended to match
+  the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main)."
+  [c config-paths    PATH [str] "the list of deps.edn files to read"
+   C classpath-aliases KW [kw]  "the list of classpath aliases to use"
+   R resolve-aliases   KW [kw]  "the list of resolve aliases to use"
+   r repeatable           bool  "Exclude ~/.clojure/deps.edn for a repeatable build"
+   v verbose              bool  "Be verbose (and ask tools.deps to be verbose too)"]
+  (load-deps {:config-paths      config-paths
+              :classpath-aliases classpath-aliases
+              :resolve-aliases   resolve-aliases
+              :repeatable        repeatable
+              :verbose           verbose})
+  identity)

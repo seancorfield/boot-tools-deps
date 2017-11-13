@@ -8,7 +8,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.1.1"]
+    [seancorfield/boot-tools-deps "0.1.2"]
 
 and then expose the task with:
 
@@ -16,7 +16,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.1.1 ...
+    boot -d seancorfield/boot-tools-deps:0.1.2 ...
 
 The available arguments are:
 
@@ -32,6 +32,11 @@ Differences from how `clj` works:
 * `clj` computes the full classpath and caches it in a local file. _`boot-tools-deps` does not do this (since it does not perform the final classpath computation -- it just updates the dependencies and paths so Boot itself can deal with that)._
 * Whatever value of `:paths` comes back from `tools.deps` is used as the `:resource-paths` value for Boot. Similarly, whatever value of `:extra-paths` comes back is used as the `:source-paths` value. This allows you to specify `"src"` and `"test"` (or whatever your project's equivalent are) in `deps.edn`, with aliases as needed, and have `clj` and `boot deps` behave in much the same way.
 * `boot-tools-deps` does not support `:local` dependencies (yet!).
+
+## Changes
+
+* 0.1.2 -- 11/13/2017 -- Expose `deps` task machinery as a function, `load-deps`, for more flexibility.
+* 0.1.1 -- 11/12/2017 -- First working version.
 
 ## License
 
