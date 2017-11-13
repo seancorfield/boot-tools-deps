@@ -2,6 +2,8 @@
 
 A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the same way that the `clj` script uses them (almost).
 
+[![Clojars Project](https://img.shields.io/clojars/v/seancorfield/boot-boot-tools-deps.svg)](https://clojars.org/seancorfield/boot-boot-tools-deps)
+
 ## Usage
 
 You can either add this to your `build.boot` file's `:dependencies`:
