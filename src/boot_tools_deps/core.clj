@@ -4,6 +4,7 @@
   "Set up dependencies from deps.edn files using tools.deps."
   {:boot/export-tasks true}
   (:require [boot.core :as boot :refer [deftask]]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.pprint :as pp]
             [clojure.string :as str]
@@ -27,6 +28,20 @@
                      (select-keys info [:scope :exclusions])))
     deps))
 
+(defn- load-default-deps
+  "Read our default-deps.edn file, substitute some values, convert it to
+  a hash map. This comes from the brew-install repo originally and it has
+  (currently) two variable substitutions:
+
+  * ${clojure.version} -- we use the runtime Clojure version,
+  * ${tools.deps.version} -- we use \"RELEASE\"."
+  []
+  (some-> (io/resource "boot-tools-deps-default-deps.edn")
+          (slurp)
+          (str/replace "${clojure.version}" (clojure-version))
+          (str/replace "${tools.deps.version}" "RELEASE")
+          (edn/read-string)))
+
 (defn load-deps
   "Functional version of the deps task.
 
@@ -42,16 +57,21 @@
                        (println "Looking for these deps.edn files:")
                        (pp/pprint deps-files)
                        (println))
+        ;; read-deps has special handling of `:paths` that assumes there is
+        ;; always one in the set of EDN files read in. This isn't true when
+        ;; we exclude the system default so we need special logic to handle
+        ;; that case:
         deps         (reader/read-deps (into [] (comp (map io/file)
                                                       (filter #(.exists %)))
                                              deps-files))
-        ;; We add in the version of Clojure we are running with so that
-        ;; tools.deps doesn't let another version of Clojure get loaded.
-        deps         (merge-with
-                       merge {:deps {'org.clojure/clojure
-                                     {:mvn/version (clojure-version)}}
-                              :mvn/repos mvn/standard-repos}
-                       deps)
+        has-paths?   (:paths deps)
+        deps         (merge-with merge
+                       (cond-> (load-default-deps)
+                         ;; Last one wins, so remove default:
+                         has-paths? (dissoc :paths))
+                       (cond-> deps
+                         ;; Ensure no nil :paths entry in deps:
+                         (not has-paths?) (dissoc :paths)))
         resolve-args (cond-> (#'util/resolve-deps-aliases deps
                                (str/join (map str resolve-aliases)))
                        verbose (assoc :verbose true))
@@ -63,16 +83,16 @@
       (println "\nAdding these dependencies:")
       (pp/pprint final-deps))
     (boot/merge-env! :dependencies final-deps)
-    (when-let [paths (not-empty (into (set (:paths deps))
-                                      (:paths cp-args)))]
+    (when-let [paths (not-empty (:paths deps))]
       (when verbose
         (println "And these :resource-paths (:paths)    : " paths))
-      (boot/merge-env! :resource-paths paths))
-    (when-let [paths (not-empty (into (set (:extra-paths deps))
-                                      (:extra-paths cp-args)))]
+      (boot/merge-env! :resource-paths (set paths)))
+    ;; Handle :extra-paths via last one wins:
+    (when-let [paths (or (not-empty (:extra-paths cp-args))
+                         (not-empty (:extra-paths deps)))]
       (when verbose
         (println "And these :source-paths (:extra-paths): " paths))
-      (boot/merge-env! :source-paths paths))))
+      (boot/merge-env! :source-paths (set paths)))))
 
 (deftask deps
   "Use tools.deps to read and resolve the specified deps.edn files.

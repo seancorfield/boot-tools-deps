@@ -8,7 +8,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.1.2"]
+    [seancorfield/boot-tools-deps "0.1.3"]
 
 and then expose the task with:
 
@@ -16,7 +16,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.1.2 ...
+    boot -d seancorfield/boot-tools-deps:0.1.3 ...
 
 The available arguments are:
 
@@ -35,6 +35,7 @@ Differences from how `clj` works:
 
 ## Changes
 
+* 0.1.3 -- 11/15/2017 -- Fix #2 by using `deps.edn` template from `brew-install` repo as defaults.
 * 0.1.2 -- 11/13/2017 -- Expose `deps` task machinery as a function, `load-deps`, for more flexibility.
 * 0.1.1 -- 11/12/2017 -- First working version.
 

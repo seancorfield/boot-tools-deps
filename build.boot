@@ -1,10 +1,11 @@
 (def project 'seancorfield/boot-tools-deps)
-(def version "0.1.2")
+(def version "0.1.3")
 
-(set-env! :resource-paths #{"src"}
+(set-env! :resource-paths #{"resources" "src"}
           :dependencies   '[[org.clojure/clojure "RELEASE"]
                             [org.clojure/tools.deps.alpha "RELEASE"]
-                            [boot/core "RELEASE" :scope "test"]])
+                            [boot/core "RELEASE" :scope "test"]
+                            [clj-http "RELEASE" :scope "test"]])
 
 (task-options!
  pom {:project     project
@@ -15,9 +16,24 @@
       :license     {"Eclipse Public License"
                     "http://www.eclipse.org/legal/epl-v10.html"}})
 
+(require '[clj-http.client :as http]
+         '[clojure.edn :as edn])
+
+(def ^:private brew-install-edn
+  (str "https://raw.githubusercontent.com/clojure/brew-install"
+       "/master/src/main/resources/deps.edn"))
+
+(defn- update-default-deps
+  "Update our local EDN from the brew-install repo."
+  []
+  (let [brew-install-deps (http/get brew-install-edn)]
+    (spit "resources/boot-tools-deps-default-deps.edn"
+          (:body brew-install-deps))))
+
 (deftask build
   "Build and install the project locally."
   []
+  (update-default-deps)
   (comp (pom) (jar) (install)))
 
 (deftask deploy
