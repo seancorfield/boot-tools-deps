@@ -8,7 +8,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.1.3"]
+    [seancorfield/boot-tools-deps "0.1.4"]
 
 and then expose the task with:
 
@@ -16,11 +16,12 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.1.3 ...
+    boot -d seancorfield/boot-tools-deps:0.1.4 ...
 
 The available arguments are:
 
 * `-c` `--config-files` -- specify the `deps.edn` files to be used
+* `-A` `--aliases` -- shorthand for specifying `-R` and `-C` with the same alias
 * `-R` `--resolve-aliases` -- specify the aliases for resolving dependencies
 * `-C` `--classpath-aliases` -- specify the aliases for classpath additions
 * `-r` `--repeatable` -- ignores `~/.clojure/deps.edn`
@@ -28,13 +29,14 @@ The available arguments are:
 
 Differences from how `clj` works:
 
-* The "system" `deps.edn` file is not read. This is the `deps.edn` file that lives in the `clj` installation. It provides basic defaults for `:paths` (`["src"]`), `:deps` (the version of Clojure that is installed with `clj`), `:mvn/repos` (Clojars and Maven Central) and provides a (resolve) alias of `:deps` (which adds `tools.deps.alpha` as `:extra-deps`) and a (classpath) alias of `:test` (which adds `["test"]` as `:extra-paths`). _`boot-tools-deps` has no default for `:paths` and provides no default aliases, but it uses the same default `:mvn/repos`. It sets the default `:deps` to whatever version of Clojure is running by the time this task is run._
+* The "system" `deps.edn` file is not read but `boot-tools-deps` merges in a copy taken from the `clojure/brew-install` repository so the effect should be the same. _This means the default `deps.edn` information may lag behind the latest, distributed/installed version, or may be ahead of the version you actually have installed (if you have not updated `clojure` recently). The version of Clojure used is whatever version is running by the time this task is run -- you can only change that via `BOOT_CLOJURE_VERSION` or `~/.boot/boot.properties`, not via `deps.edn`._
 * `clj` computes the full classpath and caches it in a local file. _`boot-tools-deps` does not do this (since it does not perform the final classpath computation -- it just updates the dependencies and paths so Boot itself can deal with that)._
 * Whatever value of `:paths` comes back from `tools.deps` is used as the `:resource-paths` value for Boot. Similarly, whatever value of `:extra-paths` comes back is used as the `:source-paths` value. This allows you to specify `"src"` and `"test"` (or whatever your project's equivalent are) in `deps.edn`, with aliases as needed, and have `clj` and `boot deps` behave in much the same way.
 * `boot-tools-deps` does not support `:local` dependencies (yet!).
 
 ## Changes
 
+* 0.1.4 -- unreleased -- Fix #3 by updating `deps.edn` template from `brew-install` (changes Clojars repo URL); switches from `HOME` environment variable to `user.home` system property; adds `-A` option for when you need the same alias on both `-R` and `-C`; now relies on `tools.deps.alpha.makecp` loading all the specific providers (instead of loading them manually).
 * 0.1.3 -- 11/15/2017 -- Fix #2 by using `deps.edn` template from `brew-install` repo as defaults.
 * 0.1.2 -- 11/13/2017 -- Expose `deps` task machinery as a function, `load-deps`, for more flexibility.
 * 0.1.1 -- 11/12/2017 -- First working version.

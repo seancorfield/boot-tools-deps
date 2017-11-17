@@ -10,13 +10,7 @@
             [clojure.string :as str]
             [clojure.tools.deps.alpha :as deps]
             [clojure.tools.deps.alpha.makecp :as util]
-            [clojure.tools.deps.alpha.reader :as reader]
-            [clojure.tools.deps.alpha.util.maven :as mvn]))
-
-;; Pull in the specific artifact providers
-(require ; '[clojure.tools.deps.alpha.providers.git]
-         '[clojure.tools.deps.alpha.providers.local]
-         '[clojure.tools.deps.alpha.providers.maven])
+            [clojure.tools.deps.alpha.reader :as reader]))
 
 (defn- libs->boot-deps
   "Turn tools.deps resolved dependencies (libs) into Boot-style
@@ -47,7 +41,8 @@
 
   Can be called from other Boot code as needed."
   [{:keys [config-paths classpath-aliases resolve-aliases repeatable verbose]}]
-  (let [home-dir     (get (System/getenv) "HOME")
+  (let [home-dir     (System/getProperty "user.home")
+        _            (assert home-dir "Unable to determine your home directory!")
         deps-files   (cond->> ["deps.edn"]
                          (seq config-paths)
                          (into config-paths)
@@ -102,13 +97,14 @@
   With the exception of -r and -v, the arguments are intended to match
   the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main)."
   [c config-paths    PATH [str] "the list of deps.edn files to read"
+   A aliases           KW [kw]  "the list of aliases (for both -C and -R)"
    C classpath-aliases KW [kw]  "the list of classpath aliases to use"
    R resolve-aliases   KW [kw]  "the list of resolve aliases to use"
    r repeatable           bool  "Exclude ~/.clojure/deps.edn for a repeatable build"
    v verbose              bool  "Be verbose (and ask tools.deps to be verbose too)"]
   (load-deps {:config-paths      config-paths
-              :classpath-aliases classpath-aliases
-              :resolve-aliases   resolve-aliases
+              :classpath-aliases (into (vec aliases) classpath-aliases)
+              :resolve-aliases   (into (vec aliases) resolve-aliases)
               :repeatable        repeatable
               :verbose           verbose})
   identity)

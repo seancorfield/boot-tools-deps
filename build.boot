@@ -1,5 +1,5 @@
 (def project 'seancorfield/boot-tools-deps)
-(def version "0.1.3")
+(def version "0.1.4")
 
 (set-env! :resource-paths #{"resources" "src"}
           :dependencies   '[[org.clojure/clojure "RELEASE"]
