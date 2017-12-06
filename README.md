@@ -24,7 +24,7 @@ The available arguments are:
 * `-A` `--aliases` -- shorthand for specifying `-R` and `-C` with the same alias
 * `-R` `--resolve-aliases` -- specify the aliases for resolving dependencies
 * `-C` `--classpath-aliases` -- specify the aliases for classpath additions
-* `-r` `--repeatable` -- ignores `~/.clojure/deps.edn`
+* `-r` `--repeatable` -- use only the local `deps.edn` file (or the `-c` specified files)
 * `-v` `--verbose` -- explain what the task is doing (this also makes `tools.deps` verbose)
 
 Differences from how `clj` works:
@@ -36,7 +36,7 @@ Differences from how `clj` works:
 
 ## Changes
 
-* 0.1.4 -- unreleased -- Fix #3 by updating `deps.edn` template from `brew-install` (changes Clojars repo URL); switches from `HOME` environment variable to `user.home` system property; adds `-A` option for when you need the same alias on both `-R` and `-C`; now relies on `tools.deps.alpha.makecp` loading all the specific providers (instead of loading them manually).
+* 0.1.4 -- 12/06/2017 -- Fix #3 by updating `deps.edn` template from `brew-install` (changes Clojars repo URL); fix #4 by correcting how `-r` and `-c` options affect the list of `deps.edn` files used; switches from `HOME` environment variable to `user.home` system property; adds `-A` option for when you need the same alias on both `-R` and `-C`; now relies on `tools.deps.alpha.makecp` loading all the specific providers (instead of loading them manually).
 * 0.1.3 -- 11/15/2017 -- Fix #2 by using `deps.edn` template from `brew-install` repo as defaults.
 * 0.1.2 -- 11/13/2017 -- Expose `deps` task machinery as a function, `load-deps`, for more flexibility.
 * 0.1.1 -- 11/12/2017 -- First working version.

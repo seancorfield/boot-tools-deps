@@ -43,11 +43,11 @@
   [{:keys [config-paths classpath-aliases resolve-aliases repeatable verbose]}]
   (let [home-dir     (System/getProperty "user.home")
         _            (assert home-dir "Unable to determine your home directory!")
-        deps-files   (cond->> ["deps.edn"]
-                         (seq config-paths)
-                         (into config-paths)
-                         (and home-dir (not repeatable))
-                         (into [(str home-dir "/.clojure/deps.edn")]))
+        deps-files   (if (seq config-paths)
+                       config-paths ;; the complete list of deps.edn files
+                       (cond->> ["deps.edn"]
+                         (not repeatable)
+                         (into [(str home-dir "/.clojure/deps.edn")])))
         _            (when verbose
                        (println "Looking for these deps.edn files:")
                        (pp/pprint deps-files)
@@ -61,7 +61,11 @@
                                              deps-files))
         has-paths?   (:paths deps)
         deps         (merge-with merge
-                       (cond-> (load-default-deps)
+                       (cond-> (if (or repeatable (seq config-paths))
+                                 ;; #4 -Srepro ignores system deps too!
+                                 ;; assume config-paths is complete list!
+                                 {}
+                                 (load-default-deps))
                          ;; Last one wins, so remove default:
                          has-paths? (dissoc :paths))
                        (cond-> deps
@@ -94,13 +98,19 @@
 
   The dependencies read in are added to your Boot :dependencies vector.
 
-  With the exception of -r and -v, the arguments are intended to match
-  the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main)."
+  With the exception of -A, -r, and -v, the arguments are intended to match
+  the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main).
+  Note, in particular, that -c / --config-paths is assumed to be the COMPLETE
+  list of EDN files to read (and therefore overrides the default set of
+  system deps, user deps, and local deps).
+
+  The -r option is equivalent to the -Srepro option in tools.deps, which will
+  exclude both the system deps and the user deps."
   [c config-paths    PATH [str] "the list of deps.edn files to read"
    A aliases           KW [kw]  "the list of aliases (for both -C and -R)"
    C classpath-aliases KW [kw]  "the list of classpath aliases to use"
    R resolve-aliases   KW [kw]  "the list of resolve aliases to use"
-   r repeatable           bool  "Exclude ~/.clojure/deps.edn for a repeatable build"
+   r repeatable           bool  "Use only the specified deps.edn file for a repeatable build"
    v verbose              bool  "Be verbose (and ask tools.deps to be verbose too)"]
   (load-deps {:config-paths      config-paths
               :classpath-aliases (into (vec aliases) classpath-aliases)
