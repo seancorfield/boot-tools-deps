@@ -4,6 +4,7 @@
   "Set up dependencies from deps.edn files using tools.deps."
   {:boot/export-tasks true}
   (:require [boot.core :as boot :refer [deftask]]
+            [boot.pod :as pod]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.pprint :as pp]
@@ -65,25 +66,43 @@
         deps         (if (or repeatable (seq config-paths))
                        deps
                        (reader/merge-deps [(load-default-deps) deps]))
+        paths        (set (or (seq (:paths deps)) []))
         resolve-args (cond-> (deps/combine-aliases deps resolve-aliases)
-                       verbose (assoc :verbose true))
-        cp-args      (deps/combine-aliases deps classpath-aliases)
+                       ;; handle both legacy boolean and new counter
+                       (and verbose (or (boolean? verbose) (< 1 verbose)))
+                       (assoc :verbose true))
         libs         (deps/resolve-deps deps resolve-args)
-        final-deps   (reduce-kv libs->boot-deps [] libs)]
+        final-deps   (reduce-kv libs->boot-deps [] libs)
+        cp-args      (deps/combine-aliases deps classpath-aliases)
+        cp           (deps/make-classpath libs (:paths deps) cp-args)
+        cp-seq       (str/split cp (re-pattern java.io.File/pathSeparator))
+        [jars dirs]  (reduce (fn [[jars dirs] item]
+                               (let [f (java.io.File. item)]
+                                 (if (and (.exists f) (not (paths item)))
+                                   (cond (.isFile f)
+                                         [(conj jars item) dirs]
+                                         (.isDirectory f)
+                                         [jars (conj dirs item)]
+                                         :else
+                                         [jars dirs])
+                                   [jars dirs])))
+                             [[] []]
+                             cp-seq)]
     (when verbose
-      (println "\nAdding these dependencies:")
+      (println "\nProduced these dependencies:")
       (pp/pprint final-deps))
-    (boot/merge-env! :dependencies final-deps)
-    (when-let [paths (not-empty (:paths deps))]
+    (when (seq paths)
       (when verbose
-        (println "And these :resource-paths (:paths)    : " paths))
-      (boot/merge-env! :resource-paths (set paths)))
-    ;; Handle :extra-paths via last one wins:
-    (when-let [paths (or (not-empty (:extra-paths cp-args))
-                         (not-empty (:extra-paths deps)))]
+        (println "\nAdding these :resource-paths"
+                 (str/join " " paths)))
+      (boot/merge-env! :resource-paths paths))
+    (when (seq dirs)
       (when verbose
-        (println "And these :source-paths (:extra-paths): " paths))
-      (boot/merge-env! :source-paths (set paths)))))
+        (println "Adding these :source-paths  "
+                 (str/join " " dirs)))
+      (boot/merge-env! :source-paths (set dirs)))
+    (doseq [jar jars]
+      (pod/add-classpath jar))))
 
 (deftask deps
   "Use tools.deps to read and resolve the specified deps.edn files.
@@ -98,12 +117,12 @@
 
   The -r option is equivalent to the -Srepro option in tools.deps, which will
   exclude both the system deps and the user deps."
-  [c config-paths    PATH [str] "the list of deps.edn files to read"
-   A aliases           KW [kw]  "the list of aliases (for both -C and -R)"
-   C classpath-aliases KW [kw]  "the list of classpath aliases to use"
-   R resolve-aliases   KW [kw]  "the list of resolve aliases to use"
-   r repeatable           bool  "Use only the specified deps.edn file for a repeatable build"
-   v verbose              bool  "Be verbose (and ask tools.deps to be verbose too)"]
+  [c config-paths    PATH [str] "the list of deps.edn files to read."
+   A aliases           KW [kw]  "the list of aliases (for both -C and -R)."
+   C classpath-aliases KW [kw]  "the list of classpath aliases to use."
+   R resolve-aliases   KW [kw]  "the list of resolve aliases to use."
+   r repeatable           bool  "Use only the specified deps.edn file for a repeatable build."
+   v verbose              int   "the verbosity level."]
   (load-deps {:config-paths      config-paths
               :classpath-aliases (into (vec aliases) classpath-aliases)
               :resolve-aliases   (into (vec aliases) resolve-aliases)
