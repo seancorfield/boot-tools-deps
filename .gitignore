@@ -8,5 +8,6 @@ pom.xml.asc
 .nrepl-history
 /.lein-*
 /.nrepl-port
+/test/target
 .hgignore
 .hg/
