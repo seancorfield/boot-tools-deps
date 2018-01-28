@@ -27,7 +27,26 @@ The available arguments are:
 * `-r` `--repeatable` -- use only the local `deps.edn` file (or the `-c` specified files)
 * `-v` `--verbose` -- explain what the task is doing (this also makes `tools.deps` verbose)
 
-Differences from how `clj` works:
+### Specifying aliases for tasks in `build.boot`
+
+You can specify different classpaths for different tasks. For example, to use the default classpath for the `build` task:
+
+    (deftask build
+      "Build and install the project locally."
+      []
+      (comp (deps) (pom) (jar) (install)))
+
+And to add the `:test` alias when testing:
+
+    (require '[adzerk.boot-test :as boot-test])
+
+    (deftask test
+      "Runs tests"
+      []
+      (comp (deps :aliases [:test])
+            (boot-test/test)))
+
+## Differences from how `clj` works
 
 * The "system" `deps.edn` file is not read but `boot-tools-deps` merges in a copy taken from the `clojure/brew-install` repository so the effect should be the same. _This means the default `deps.edn` information may lag behind the latest, distributed/installed version, or may be ahead of the version you actually have installed (if you have not updated `clojure` recently). The version of Clojure used is whatever version is running by the time this task is run -- you can only change that via `BOOT_CLOJURE_VERSION` or `~/.boot/boot.properties`, not via `deps.edn`._
 * `clj` computes the full classpath and caches it in a local file. _`boot-tools-deps` does not do this (since it does not perform the final classpath computation -- it just updates the dependencies and paths so Boot itself can deal with that)._
