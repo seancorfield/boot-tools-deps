@@ -8,7 +8,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.1.4"]
+    [seancorfield/boot-tools-deps "0.1.5"]
 
 and then expose the task with:
 
@@ -16,7 +16,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.1.4 ...
+    boot -d seancorfield/boot-tools-deps:0.1.5 ...
 
 The available arguments are:
 
@@ -36,6 +36,7 @@ Differences from how `clj` works:
 
 ## Changes
 
+* 0.1.5 -- 01/27/2018 -- Update to use the most recent `tools.deps.alpha` release.
 * 0.1.4 -- 12/06/2017 -- Fix #3 by updating `deps.edn` template from `brew-install` (changes Clojars repo URL); fix #4 by correcting how `-r` and `-c` options affect the list of `deps.edn` files used; switches from `HOME` environment variable to `user.home` system property; adds `-A` option for when you need the same alias on both `-R` and `-C`; now relies on `tools.deps.alpha.makecp` loading all the specific providers (instead of loading them manually).
 * 0.1.3 -- 11/15/2017 -- Fix #2 by using `deps.edn` template from `brew-install` repo as defaults.
 * 0.1.2 -- 11/13/2017 -- Expose `deps` task machinery as a function, `load-deps`, for more flexibility.
@@ -43,6 +44,6 @@ Differences from how `clj` works:
 
 ## License
 
-Copyright © 2017 Sean Corfield, all rights reserved.
+Copyright © 2017-2018 Sean Corfield, all rights reserved.
 
 Distributed under the Eclipse Public License version 1.0.

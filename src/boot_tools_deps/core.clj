@@ -9,8 +9,9 @@
             [clojure.pprint :as pp]
             [clojure.string :as str]
             [clojure.tools.deps.alpha :as deps]
-            [clojure.tools.deps.alpha.makecp :as util]
-            [clojure.tools.deps.alpha.reader :as reader]))
+            [clojure.tools.deps.alpha.reader :as reader]
+            ;; load the main script to load the various extension points
+            [clojure.tools.deps.alpha.script.make-classpath]))
 
 (defn- libs->boot-deps
   "Turn tools.deps resolved dependencies (libs) into Boot-style
@@ -52,30 +53,16 @@
                        (println "Looking for these deps.edn files:")
                        (pp/pprint deps-files)
                        (println))
-        ;; read-deps has special handling of `:paths` that assumes there is
-        ;; always one in the set of EDN files read in. This isn't true when
-        ;; we exclude the system default so we need special logic to handle
-        ;; that case:
-        deps         (reader/read-deps (into [] (comp (map io/file)
-                                                      (filter #(.exists %)))
-                                             deps-files))
-        has-paths?   (:paths deps)
-        deps         (merge-with merge
-                       (cond-> (if (or repeatable (seq config-paths))
-                                 ;; #4 -Srepro ignores system deps too!
-                                 ;; assume config-paths is complete list!
-                                 {}
-                                 (load-default-deps))
-                         ;; Last one wins, so remove default:
-                         has-paths? (dissoc :paths))
-                       (cond-> deps
-                         ;; Ensure no nil :paths entry in deps:
-                         (not has-paths?) (dissoc :paths)))
-        resolve-args (cond-> (#'util/resolve-deps-aliases deps
-                               (str/join (map str resolve-aliases)))
+        deps         (reader/read-deps
+                      (into [] (comp (map io/file)
+                                     (filter #(.exists %)))
+                            deps-files))
+        deps         (if (or repeatable (seq config-paths))
+                       deps
+                       (reader/merge-deps [(load-default-deps) deps]))
+        resolve-args (cond-> (deps/combine-aliases deps resolve-aliases)
                        verbose (assoc :verbose true))
-        cp-args      (#'util/resolve-cp-aliases deps
-                       (str/join (map str classpath-aliases)))
+        cp-args      (deps/combine-aliases deps classpath-aliases)
         libs         (deps/resolve-deps deps resolve-args)
         final-deps   (reduce-kv libs->boot-deps [] libs)]
     (when verbose
