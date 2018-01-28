@@ -3,4 +3,8 @@
  :aliases
  {:test {:extra-deps {org.clojure/test.check {:mvn/version "LATEST"
                                               :scope "test"}}
-         :extra-paths ["test"]}}}
+         :extra-paths ["test"]}
+  :local-test {:extra-deps {seancorfield/play {:local/root "/Users/sean/clojure"}}}
+  :git-test {:extra-deps 
+             {clj-time/clj-time {:git/url "https://github.com/clj-time/clj-time.git"
+                                 :sha "074bcf3c6e58e886e6fca63062c6b6bb57d71bc6"}}}}}
