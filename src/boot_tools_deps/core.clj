@@ -1,4 +1,4 @@
-;; Copyright (c) 2017 World Singles llc
+;; Copyright (c) 2017-2018 World Singles llc
 
 (ns boot-tools-deps.core
   "Set up dependencies from deps.edn files using tools.deps."
@@ -10,8 +10,13 @@
             [clojure.string :as str]
             [clojure.tools.deps.alpha :as deps]
             [clojure.tools.deps.alpha.reader :as reader]
-            ;; load the main script to load the various extension points
-            [clojure.tools.deps.alpha.script.make-classpath]))
+            ;; load the various extension points
+            [clojure.tools.deps.alpha.extensions]
+            [clojure.tools.deps.alpha.extensions.deps]
+            [clojure.tools.deps.alpha.extensions.git]
+            [clojure.tools.deps.alpha.extensions.local]
+            [clojure.tools.deps.alpha.extensions.maven]
+            [clojure.tools.deps.alpha.extensions.pom]))
 
 (defn- libs->boot-deps
   "Turn tools.deps resolved dependencies (libs) into Boot-style
