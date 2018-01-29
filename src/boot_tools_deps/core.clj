@@ -7,7 +7,8 @@
             [boot.pod :as pod]
             [clojure.java.io :as io]
             [clojure.pprint :as pp]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.edn :as edn]))
 
 (defn- load-default-deps
   "Read our default-deps.edn file and substitute some values.
@@ -24,7 +25,8 @@
   (some-> (io/resource "boot-tools-deps-default-deps.edn")
           (slurp)
           (str/replace "${clojure.version}" (clojure-version))
-          (str/replace "${tools.deps.version}" "RELEASE")))
+          (str/replace "${tools.deps.version}" "RELEASE")
+          (edn/read-string)))
 
 (defn- libs->boot-deps
   "Convert tools.deps dependencies into Boot dependencies.
@@ -40,80 +42,27 @@
                                   [:scope :exclusions])))
     deps))
 
+(defn- make-pod
+  []
+  (let [pod-env (update (boot/get-env) :dependencies conj
+                  '[org.clojure/tools.deps.alpha "0.5.342"]
+                  '[seancorfield/boot-tools-deps "RELEASE"])]
+     (pod/make-pod pod-env)))
+
 (defn- tools-deps
   "Run tools.deps inside a pod to produce:
   * :resource-paths -- source code directories from :paths in deps.edn files
   * :source-paths -- additional directories from :extra-paths and classpath
+  * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath"
   [deps-files deps-data classpath-aliases resolve-aliases total verbose]
-  (let [; use strings to avoid serialization problems into pod evaluation:
-        system-deps-str (load-default-deps)
-        deps-data-str   (when deps-data (pr-str deps-data))
-        pod             (pod/make-pod
-                         (update (boot/get-env) :dependencies conj
-                                 '[org.clojure/tools.deps.alpha "0.5.342"]))]
-    (pod/require-in pod '[boot.pod :as pod])
-    (pod/require-in pod '[clojure.edn :as edn])
-    (pod/require-in pod '[clojure.java.io :as io])
-    (pod/require-in pod '[clojure.pprint :as pp])
-    (pod/require-in pod '[clojure.string :as str])
-    (pod/require-in pod '[clojure.tools.deps.alpha :as deps])
-    (pod/require-in pod '[clojure.tools.deps.alpha.reader :as reader])
-    ;; load the various extension points
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions])
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions.deps])
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions.git])
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions.local])
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions.maven])
-    (pod/require-in pod '[clojure.tools.deps.alpha.extensions.pom])
-    (let [paths
-          (pod/with-eval-in pod
-            (let [system-deps  (when-not ~total
-                                 (edn/read-string ~system-deps-str))
-                  deps-data    (when ~deps-data-str
-                                 (edn/read-string ~deps-data-str))
-                  deps         (reader/read-deps
-                                (into [] (comp (map io/file)
-                                               (filter #(.exists %)))
-                                      ~deps-files))
-                  deps         (if ~total
-                                 (if deps-data
-                                   (reader/merge-deps [deps deps-data])
-                                   deps)
-                                 (reader/merge-deps
-                                  (cond-> [system-deps deps]
-                                    deps-data (conj deps-data))))
-                  paths        (set (or (seq (:paths deps)) []))
-                  resolve-args (cond->
-                                 (deps/combine-aliases deps ~resolve-aliases)
-                                 ;; handle both legacy boolean and new counter
-                                 (and ~verbose
-                                      (or (boolean? ~verbose)
-                                          (< 1 ~verbose)))
-                                 (assoc :verbose true))
-                  libs         (deps/resolve-deps deps resolve-args)
-                  cp-args      (deps/combine-aliases deps ~classpath-aliases)
-                  cp           (deps/make-classpath libs (:paths deps) cp-args)
-                  cp-separator (re-pattern java.io.File/pathSeparator)
-                  [jars dirs]  (reduce (fn [[jars dirs] item]
-                                         (let [f (java.io.File. item)]
-                                           (if (and (.exists f)
-                                                    (not (paths item)))
-                                             (cond (.isFile f)
-                                                   [(conj jars item) dirs]
-                                                   (.isDirectory f)
-                                                   [jars (conj dirs item)]
-                                                   :else
-                                                   [jars dirs])
-                                             [jars dirs])))
-                                       [[] []]
-                                       (str/split cp cp-separator))]
-              {:resource-paths paths
-               :source-paths (set dirs)
-               :dependencies libs
-               :classpath jars}))]
+  (let [system-deps     (when-not total (load-default-deps))
+        pod             (make-pod)
+        paths           (pod/with-call-in pod
+                          (boot-tools-deps.pod/get-env-map
+                            ~system-deps ~deps-files ~deps-data ~classpath-aliases ~resolve-aliases ~total ~verbose))]
       (future (pod/destroy-pod pod))
-      paths)))
+      paths))
 
 (defn load-deps
   "Functional version of the deps task.
