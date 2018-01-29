@@ -2,7 +2,7 @@
 (def version "0.2.0")
 
 (set-env! :resource-paths #{"resources" "src"}
-          :dependencies   '[[org.clojure/clojure "RELEASE"]
+          :dependencies   '[[org.clojure/clojure "RELEASE" :scope "provided"]
                             [boot/core "RELEASE" :scope "provided"]
                             [clj-http "RELEASE" :scope "test"]])
 
