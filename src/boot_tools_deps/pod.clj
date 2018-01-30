@@ -14,7 +14,7 @@
     [clojure.tools.deps.alpha.extensions.pom])
   (:import [java.io File]))
 
-(defn get-env-map
+(defn build-environment-map
   "Run tools.deps to produce:
   * :resource-paths  -- source code directories from :paths in deps.edn files
   * :source-paths -- additional directories from :extra-paths and classpath
@@ -61,5 +61,3 @@
      :source-paths   (set dirs)
      :dependencies   libs
      :classpath      jars}))
-
-

@@ -18,9 +18,8 @@
   * ${clojure.version} -- we use the runtime Clojure version,
   * ${tools.deps.version} -- we use \"RELEASE\".
 
-  We leave it as a string for ease of serialization into a pod.
-  We also just 'read' the string, we do not (yet) canonicalize
-  the symbols in it (that tools.deps function is private)."
+  We do not (yet) canonicalize the symbols in it (that tools.deps
+  function is private)."
   []
   (some-> (io/resource "boot-tools-deps-default-deps.edn")
           (slurp)
@@ -45,8 +44,7 @@
 (defn- make-pod
   []
   (let [pod-env (update (boot/get-env) :dependencies conj
-                  '[org.clojure/tools.deps.alpha "0.5.342"]
-                  '[seancorfield/boot-tools-deps "RELEASE"])]
+                  '[org.clojure/tools.deps.alpha "0.5.342"])]
      (pod/make-pod pod-env)))
 
 (defn- tools-deps
@@ -59,8 +57,10 @@
   (let [system-deps     (when-not total (load-default-deps))
         pod             (make-pod)
         paths           (pod/with-call-in pod
-                          (boot-tools-deps.pod/get-env-map
-                            ~system-deps ~deps-files ~deps-data ~classpath-aliases ~resolve-aliases ~total ~verbose))]
+                          (boot-tools-deps.pod/build-environment-map
+                            ~system-deps ~deps-files ~deps-data
+                            ~classpath-aliases ~resolve-aliases
+                            ~total ~verbose))]
       (future (pod/destroy-pod pod))
       paths))
 
