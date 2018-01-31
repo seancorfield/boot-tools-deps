@@ -43,9 +43,24 @@
 
 (defn- make-pod
   []
-  (let [pod-env (update (boot/get-env) :dependencies conj
-                  '[org.clojure/tools.deps.alpha "0.5.342"])]
-     (pod/make-pod pod-env)))
+  (let [pod-env (-> (boot/get-env)
+                    ;; Pod class path needs to be bootstrapped independently of
+                    ;; the core Pod (build.boot context) so that, for example,
+                    ;; an older version of Clojure than 1.9 can be used in the
+                    ;; core Pod.
+                    (dissoc :boot-class-path :fake-class-path)
+                    ;; Clojure version in the core Pod (build.boot context)
+                    ;; is not guaranteed to be recent enough as Boot supports
+                    ;; 1.6.0 onwards. Therefore filter out and re-add Clojure
+                    ;; dependency.
+                    (update :dependencies
+                      (fn [dependencies]
+                        (conj (filter
+                                #(not (= (first %) 'org.clojure/clojure))
+                                dependencies)
+                          '[org.clojure/clojure "RELEASE"]
+                          '[org.clojure/tools.deps.alpha "0.5.342"]))))]
+   (pod/make-pod pod-env)))
 
 (defn- tools-deps
   "Run tools.deps inside a pod to produce:
