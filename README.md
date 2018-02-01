@@ -8,7 +8,7 @@ A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the sa
 
 You can either add this to your `build.boot` (or `profile.boot`) file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.2.2"]
+    [seancorfield/boot-tools-deps "0.2.3"]
 
 and then expose the task with:
 
@@ -16,7 +16,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.2.2 ...
+    boot -d seancorfield/boot-tools-deps:0.2.3 ...
 
 The available arguments are:
 
@@ -59,6 +59,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
+* 0.2.3 -- 01/31/2018 -- Ensure pod environment gets recent version of Clojure (@superstructor).
 * 0.2.2 -- 01/29/2018 -- Refactor pod code to a separate namespace to make the code easier to work with (@superstructor).
 * 0.2.1 -- 01/29/2018 -- Make Clojure a `:provided` dependency for consistency (@superstructor).
 * 0.2.0 -- 01/28/2018 -- Update to use the most recent `tools.deps.alpha` release; directly update the Boot classpath (which means Git and Local dependencies are now supported!); run `tools.deps` inside a Boot pod; no longer update Boot's `:dependencies` by default.
