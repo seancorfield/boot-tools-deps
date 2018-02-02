@@ -42,25 +42,31 @@
     deps))
 
 (defn- make-pod
+  "Make and return a Boot pod with tools.deps.alpha and the latest Clojure
+  release (to ensure that tools.deps.alpha will run). The pod will also
+  include Boot and boot-tools-deps (since they're both running), as well as
+  any other 'runtime' dependencies (which is why it's best to avoid putting
+  additional dependencies in build.boot when using this tool!)."
   []
-  (let [pod-env (-> (boot/get-env)
-                    ;; Pod class path needs to be bootstrapped independently of
-                    ;; the core Pod (build.boot context) so that, for example,
-                    ;; an older version of Clojure than 1.9 can be used in the
-                    ;; core Pod.
-                    (dissoc :boot-class-path :fake-class-path)
-                    ;; Clojure version in the core Pod (build.boot context)
-                    ;; is not guaranteed to be recent enough as Boot supports
-                    ;; 1.6.0 onwards. Therefore filter out and re-add Clojure
-                    ;; dependency.
-                    (update :dependencies
-                      (fn [dependencies]
-                        (conj (filter
-                                #(not (= (first %) 'org.clojure/clojure))
-                                dependencies)
-                          '[org.clojure/clojure "RELEASE"]
-                          '[org.clojure/tools.deps.alpha "0.5.342"]))))]
-   (pod/make-pod pod-env)))
+  (let [pod-env
+        (-> (boot/get-env)
+            ;; Pod class path needs to be bootstrapped independently of
+            ;; the core Pod (build.boot context) so that, for example,
+            ;; an older version of Clojure than 1.9 can be used in the
+            ;; core Pod.
+            (dissoc :boot-class-path :fake-class-path)
+            ;; Clojure version in the core Pod (build.boot context)
+            ;; is not guaranteed to be recent enough as Boot supports
+            ;; 1.6.0 onwards. Therefore filter out and re-add Clojure
+            ;; dependency.
+            (update :dependencies
+                    (fn [dependencies]
+                      (conj (filter
+                             #(not (= (first %) 'org.clojure/clojure))
+                             dependencies)
+                            '[org.clojure/clojure "RELEASE"]
+                            '[org.clojure/tools.deps.alpha "0.5.342"]))))]
+    (pod/make-pod pod-env)))
 
 (defn- tools-deps
   "Run tools.deps inside a pod to produce:
@@ -68,38 +74,41 @@
   * :source-paths -- additional directories from :extra-paths and classpath
   * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath"
-  [deps-files deps-data classpath-aliases resolve-aliases total verbose]
-  (let [system-deps     (when-not total (load-default-deps))
-        pod             (make-pod)
-        paths           (pod/with-call-in pod
-                          (boot-tools-deps.pod/build-environment-map
-                            ~system-deps ~deps-files ~deps-data
-                            ~classpath-aliases ~resolve-aliases
-                            ~total ~verbose))]
-      (future (pod/destroy-pod pod))
-      paths))
+  [config-paths deps-data classpath-aliases resolve-aliases repeatable verbose]
+  (let [total       (or repeatable (seq config-paths))
+        home-dir    (System/getProperty "user.home")
+        _           (assert home-dir "Unable to determine your home directory!")
+        deps-files  (if (seq config-paths)
+                      config-paths ;; the complete list of deps.edn files
+                      (cond->> ["deps.edn"]
+                        (not repeatable)
+                        (into [(str home-dir "/.clojure/deps.edn")])))
+        _           (when verbose
+                      (println "Looking for these deps.edn files:")
+                      (pp/pprint deps-files)
+                      (println))
+        system-deps (when-not total (load-default-deps))
+        pod         (make-pod)
+        paths       (pod/with-call-in pod
+                      (boot-tools-deps.pod/build-environment-map
+                       ~system-deps ~deps-files ~deps-data
+                       ~classpath-aliases ~resolve-aliases
+                       ~total ~verbose))]
+    (future (pod/destroy-pod pod))
+    paths))
 
 (defn load-deps
   "Functional version of the deps task.
 
   Can be called from other Boot code as needed."
   [{:keys [config-paths config-data classpath-aliases resolve-aliases
-           overwrite-boot-deps repeatable verbose]}]
-  (let [home-dir   (System/getProperty "user.home")
-        _          (assert home-dir "Unable to determine your home directory!")
-        deps-files (if (seq config-paths)
-                     config-paths ;; the complete list of deps.edn files
-                     (cond->> ["deps.edn"]
-                       (not repeatable)
-                       (into [(str home-dir "/.clojure/deps.edn")])))
-        _          (when verbose
-                     (println "Looking for these deps.edn files:")
-                     (pp/pprint deps-files)
-                     (println))
-        {:keys [resource-paths source-paths dependencies classpath]}
-        (tools-deps deps-files config-data classpath-aliases resolve-aliases
-                    (or repeatable (seq config-paths)) verbose)
-        boot-libs  (reduce-kv libs->boot-deps [] dependencies)]
+           overwrite-boot-deps quick-merge repeatable verbose]}]
+  (assert (not (and overwrite-boot-deps quick-merge))
+          "Cannot use -B and -Q together!")
+  (let [{:keys [resource-paths source-paths dependencies classpath]}
+        (tools-deps config-paths config-data classpath-aliases resolve-aliases
+                    repeatable verbose)
+        boot-libs (reduce-kv libs->boot-deps [] dependencies)]
     (when verbose
       (println "\nProduced these dependencies:")
       (pp/pprint boot-libs))
@@ -117,6 +126,10 @@
       (when verbose
         (println "Adding" jar "to classpath"))
       (pod/add-classpath jar))
+    (when quick-merge
+      (when verbose
+        (println "Merging with Boot's :dependencies"))
+      (boot/merge-env! :dependencies boot-libs))
     (when overwrite-boot-deps
       ;; indulge in some hackery to persuade Boot these are the total
       ;; dependencies (for building uber jar etc) -- note that we have
@@ -131,16 +144,37 @@
 (deftask deps
   "Use tools.deps to read and resolve the specified deps.edn files.
 
-  The dependencies read in are added to your Boot :dependencies vector.
+  The dependencies read in are added to your Boot classpath. There are two
+  options to update Boot's :dependencies if additional tasks in your pipeline
+  rely on that: -B will completely overwrite the Boot :dependencies with the
+  ones produced by tools.deps and should be used when you are creating uber
+  jars; -Q will perform a quick merge of the dependencies from tools.deps into
+  the Boot environment and may be needed for certain testing tools.
 
-  With the exception of -A, -r, and -v, the arguments are intended to match
-  the clj script usage (as passed to clojure.tools.deps.alpha.makecp/-main).
+  As much as possible, the recommended approach is to avoid using the Boot
+  :dependencies vector when using boot-tools-deps so that deps.edn represents
+  the total dependencies for your project.
+
+  The -c, -D, -C, and -R arguments are intended to match the clj script usage
+  (as passed to clojure.tools.deps.alpha.script.make-classpath/-main).
   Note, in particular, that -c / --config-paths is assumed to be the COMPLETE
   list of EDN files to read (and therefore overrides the default set of
   system deps, user deps, and local deps).
 
-  The -r option is equivalent to the -Srepro option in tools.deps, which will
-  exclude both the system deps and the user deps."
+  The -r option is intended to be equivalent to the -Srepro option in
+  tools.deps, which will exclude both the system deps and the user deps.
+
+  The -D option is intended to be the equivalent to the -Sdeps option, which
+  allows you to specify an additional deps.edn-like map of dependencies which
+  are added to the set of deps.edn-derived dependencies (even when -r is
+  given).
+
+  The -A option is equivalent to specifying the same alias for both -R and -C.
+
+  The -v option makes boot-tools-deps verbose, explaining which files it looked
+  for, the dependencies it got back from tools.dep, and the changes it made to
+  Boot's classpath, :resource-paths, and :source-path. If you specify it twice
+  (-vv) then tools.deps will also be verbose about its work."
   [;; options that mirror tools.deps itself:
    c config-paths    PATH [str] "the list of deps.edn files to read."
    D config-data      EDN edn   "is treated as a final deps.edn file."
@@ -149,6 +183,7 @@
    ;; options specific to boot-tools-deps
    A aliases           KW [kw]  "the list of aliases (for both -C and -R)."
    B overwrite-boot-deps  bool  "Overwrite Boot's :dependencies."
+   Q quick-merge          bool  "Merge into Boot's :dependencies."
    r repeatable           bool  "Use only the specified deps.edn file for a repeatable build."
    v verbose              int   "the verbosity level."]
   (load-deps {:config-paths        config-paths
@@ -156,6 +191,7 @@
               :classpath-aliases   (into (vec aliases) classpath-aliases)
               :resolve-aliases     (into (vec aliases) resolve-aliases)
               :overwrite-boot-deps overwrite-boot-deps
+              :quick-merge         quick-merge
               :repeatable          repeatable
               :verbose             verbose})
   identity)

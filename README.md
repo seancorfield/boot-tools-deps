@@ -2,13 +2,15 @@
 
 A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the same way that the `clj` script uses them. Updates Boot's resources, sources, and classpath based on the paths, extra paths, and classpath computed by `tools.deps`. Can also update Boot's dependencies (for use by tasks like `uber`).
 
+The primary use case for `boot-tools-deps` is that your project runs with `clj` -- so all of its dependencies are managed via `deps.edn` files, with aliases as appropriate -- and you want to bring Boot tooling to that project, in addition. If you have an existing Boot project, the assumption is that you move all of the code-level `:dependencies` into `deps.edn` and use aliases in preference to `:scope` in order to manage how dependencies are assembled -- leaving only Boot-level tooling in `:dependencies` or supply those dependencies via the command-line.
+
 [![Clojars Project](https://img.shields.io/clojars/v/seancorfield/boot-tools-deps.svg)](https://clojars.org/seancorfield/boot-tools-deps)
 
 ## Usage
 
 You can either add this to your `build.boot` (or `profile.boot`) file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.2.3"]
+    [seancorfield/boot-tools-deps "0.3.0"]
 
 and then expose the task with:
 
@@ -16,7 +18,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.2.3 ...
+    boot -d seancorfield/boot-tools-deps:0.3.0 deps ...
 
 The available arguments are:
 
@@ -26,6 +28,7 @@ The available arguments are:
 * `-R` `--resolve-aliases` -- specify the aliases for resolving dependencies
 * `-A` `--aliases` -- shorthand for specifying `-R` and `-C` with the same alias
 * `-B` `--overwrite-boot-deps` -- in addition to setting up the classpath (and `:resource-paths` and `source-paths`), overwrite Boot's `:dependencies` with those returned from `tools.deps` -- note: this is only required for Boot tasks such as `uber` to function correctly!
+* `-Q` `--quick-merge` -- in addition to setting up the classpath etc, perform a quick and simple merge into Boot's `:dependencies` of those returned from `tools.deps` -- note: this is sometimes required for certain Boot tooling to work later on in the pipeline; it cannot be used with `-B` and should not be used with `uber` since it will include all your tooling dependencies as well
 * `-r` `--repeatable` -- use only the local `deps.edn` file (or the `-c` specified files) -- note: the `-D` option is still read and used!
 * `-v` `--verbose` -- explain what the task is doing (`-vv` also makes `tools.deps` verbose)
 
@@ -55,10 +58,11 @@ And to add the `:test` alias when testing:
 * Whatever value of `:paths` comes back from `tools.deps` is used as the `:resource-paths` value for Boot.
 * Whatever value of `:extra-paths` comes back from `tools.deps` is used as the base `:source-paths` value for Boot. You can use Boot's `sift` task to treat them as resources instead.
 * Any additional folders found on the computed classpath produced by `tools.deps` are added to the `:source-paths` and any JAR files on the computed classpath are added directly to Boot's in-memory classpath. _Boot's `:dependencies` are not updated by default._
-* In order to run tasks that depend on Boot's `:dependencies`, such as `uber`, you need to specify the `-B` option to overwrite Boot's `:dependencies` with the computed dependencies produced by `tools.deps`. _Note: transitive dependencies do not inherit the `:scope` of the dependency that caused them to be included!_
+* In order to run tasks that depend on Boot's `:dependencies`, such as `uber`, you need to specify either the `-B` option to overwrite Boot's `:dependencies` with the computed dependencies produced by `tools.deps` or the `-Q` option to merge the computed dependencies into Boot's `:dependencies`. _Note: transitive dependencies do not inherit the `:scope` of the dependency that caused them to be included!_
 
 ## Changes
 
+* 0.3.0 -- 02/02/2018 -- Add `-Q` (quick merge) for Boot's `:dependencies` to better support certain tool chains (#15); refactor `tools-deps` to match arguments for `load-deps` for easier reuse as a library (#11); update docstrings (to match current usage and explain it better); updated README to better clarify intended usage (#12).
 * 0.2.3 -- 01/31/2018 -- Ensure pod environment gets recent version of Clojure (@superstructor).
 * 0.2.2 -- 01/29/2018 -- Refactor pod code to a separate namespace to make the code easier to work with (@superstructor).
 * 0.2.1 -- 01/29/2018 -- Make Clojure a `:provided` dependency for consistency (@superstructor).
