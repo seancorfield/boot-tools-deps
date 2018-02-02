@@ -94,7 +94,7 @@
                        ~system-deps ~deps-files ~deps-data
                        ~classpath-aliases ~resolve-aliases
                        ~total ~verbose))]
-    (future (pod/destroy-pod pod))
+    (pod/destroy-pod pod)
     paths))
 
 (defn load-deps
