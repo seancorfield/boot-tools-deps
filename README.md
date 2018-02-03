@@ -62,7 +62,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
-* 0.3.1 -- in development -- Destroy pod inline instead of in a future.
+* 0.3.1 -- in development -- Destroy pod inline instead of in a future; update to `tools.deps.alpha` 0.5.351.
 * 0.3.0 -- 02/02/2018 -- Add `-Q` (quick merge) for Boot's `:dependencies` to better support certain tool chains (#15); refactor `tools-deps` to match arguments for `load-deps` for easier reuse as a library (#11); update docstrings (to match current usage and explain it better); updated README to better clarify intended usage (#12).
 * 0.2.3 -- 01/31/2018 -- Ensure pod environment gets recent version of Clojure (@superstructor).
 * 0.2.2 -- 01/29/2018 -- Refactor pod code to a separate namespace to make the code easier to work with (@superstructor).

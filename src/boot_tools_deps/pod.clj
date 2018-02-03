@@ -44,19 +44,19 @@
         cp-args      (deps/combine-aliases deps classpath-aliases)
         cp           (deps/make-classpath libs (:paths deps) cp-args)
         cp-separator (re-pattern java.io.File/pathSeparator)
-        [jars dirs] (reduce (fn [[jars dirs] item]
-                              (let [f (java.io.File. item)]
-                                (if (and (.exists f)
-                                         (not (paths item)))
-                                  (cond (.isFile f)
-                                        [(conj jars item) dirs]
-                                        (.isDirectory f)
-                                        [jars (conj dirs item)]
-                                        :else
-                                        [jars dirs])
-                                  [jars dirs])))
-                            [[] []]
-                            (str/split cp cp-separator))]
+        [jars dirs]  (reduce (fn [[jars dirs] item]
+                               (let [f (java.io.File. item)]
+                                 (if (and (.exists f)
+                                          (not (paths item)))
+                                   (cond (.isFile f)
+                                         [(conj jars item) dirs]
+                                         (.isDirectory f)
+                                         [jars (conj dirs item)]
+                                         :else
+                                         [jars dirs])
+                                   [jars dirs])))
+                             [[] []]
+                             (str/split cp cp-separator))]
     {:resource-paths paths
      :source-paths   (set dirs)
      :dependencies   libs

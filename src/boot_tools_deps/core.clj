@@ -65,7 +65,7 @@
                              #(not (= (first %) 'org.clojure/clojure))
                              dependencies)
                             '[org.clojure/clojure "RELEASE"]
-                            '[org.clojure/tools.deps.alpha "0.5.342"]))))]
+                            '[org.clojure/tools.deps.alpha "0.5.351"]))))]
     (pod/make-pod pod-env)))
 
 (defn- tools-deps
