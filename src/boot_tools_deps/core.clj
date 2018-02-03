@@ -75,7 +75,7 @@
   * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath
   * :main-opts -- any main-opts pulled from tools.deps.alpha"
-  [{:keys [config-paths deps-data
+  [{:keys [config-paths config-data
            classpath-aliases main-aliases resolve-aliases
            repeatable verbose]
     :as options}]
@@ -107,8 +107,10 @@
   "Functional version of the deps task.
 
   Can be called from other Boot code as needed."
-  [{:keys [config-paths config-data classpath-aliases resolve-aliases
-           overwrite-boot-deps quick-merge repeatable verbose]
+  [{:keys [config-paths config-data
+           classpath-aliases main-aliases resolve-aliases
+           repeatable verbose
+           overwrite-boot-deps quick-merge]
     :as options}]
   (assert (not (and overwrite-boot-deps quick-merge))
           "Cannot use -B and -Q together!")

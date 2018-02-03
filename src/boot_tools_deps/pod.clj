@@ -21,21 +21,22 @@
   * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath
   * :main-opts -- any main-opts pulled from tools.deps.alpha"
-  [{:keys [system-deps deps-files
-           deps-data classpath-aliases main-aliases resolve-aliases
-           total verbose]
+  [{:keys [config-data ; no config-paths
+           classpath-aliases main-aliases resolve-aliases
+           verbose ; no repeatable
+           system-deps deps-files total]
     :as options}]
   (let [deps         (reader/read-deps
                        (into [] (comp (map io/file)
                                       (filter #(.exists %)))
                              deps-files))
         deps         (if total
-                       (if deps-data
-                         (reader/merge-deps [deps deps-data])
+                       (if config-data
+                         (reader/merge-deps [deps config-data])
                          deps)
                        (reader/merge-deps
                          (cond-> [system-deps deps]
-                                 deps-data (conj deps-data))))
+                           config-data (conj config-data))))
         paths        (set (or (seq (:paths deps)) []))
         resolve-args (cond->
                        (deps/combine-aliases deps resolve-aliases)

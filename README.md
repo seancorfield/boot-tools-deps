@@ -68,6 +68,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
+* 0.4.1 -- 02/02/2018 -- Fix `-D` option (broken in 0.4.0).
 * 0.4.0 -- 02/02/2018 -- Destroy pod inline instead of in a future; update to `tools.deps.alpha` 0.5.351; add support for `-M` (main-aliases) and `-x` to execute `clojure.main`.
 * 0.3.0 -- 02/02/2018 -- Add `-Q` (quick merge) for Boot's `:dependencies` to better support certain tool chains (#15); refactor `tools-deps` to match arguments for `load-deps` for easier reuse as a library (#11); update docstrings (to match current usage and explain it better); updated README to better clarify intended usage (#12).
 * 0.2.3 -- 01/31/2018 -- Ensure pod environment gets recent version of Clojure (@superstructor).
