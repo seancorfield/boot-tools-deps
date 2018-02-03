@@ -19,8 +19,12 @@
   * :resource-paths  -- source code directories from :paths in deps.edn files
   * :source-paths -- additional directories from :extra-paths and classpath
   * :dependencies -- vector of Maven coordinates
-  * :classpath -- JAR files to add to the classpath"
-  [system-deps deps-files deps-data classpath-aliases resolve-aliases total verbose]
+  * :classpath -- JAR files to add to the classpath
+  * :main-opts -- any main-opts pulled from tools.deps.alpha"
+  [{:keys [system-deps deps-files
+           deps-data classpath-aliases main-aliases resolve-aliases
+           total verbose]
+    :as options}]
   (let [deps         (reader/read-deps
                        (into [] (comp (map io/file)
                                       (filter #(.exists %)))
@@ -43,6 +47,7 @@
         libs         (deps/resolve-deps deps resolve-args)
         cp-args      (deps/combine-aliases deps classpath-aliases)
         cp           (deps/make-classpath libs (:paths deps) cp-args)
+        main-opts    (:main-opts (deps/combine-aliases deps main-aliases))
         cp-separator (re-pattern java.io.File/pathSeparator)
         [jars dirs]  (reduce (fn [[jars dirs] item]
                                (let [f (java.io.File. item)]
@@ -60,4 +65,5 @@
     {:resource-paths paths
      :source-paths   (set dirs)
      :dependencies   libs
-     :classpath      jars}))
+     :classpath      jars
+     :main-opts      main-opts}))

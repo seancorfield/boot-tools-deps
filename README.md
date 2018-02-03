@@ -10,7 +10,7 @@ The primary use case for `boot-tools-deps` is that your project runs with `clj` 
 
 You can either add this to your `build.boot` (or `profile.boot`) file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.3.0"]
+    [seancorfield/boot-tools-deps "0.4.0"]
 
 and then expose the task with:
 
@@ -18,18 +18,23 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.3.0 deps ...
+    boot -d seancorfield/boot-tools-deps:0.4.0 deps ...
 
-The available arguments are:
+The available arguments that mirror `clj` and `tools.deps.alpha` are:
 
 * `-c` `--config-files` -- specify the `deps.edn` files to be used
+* `-r` `--repeatable` -- use only the local `deps.edn` file (or the `-c` specified files) -- note: the `-D` option is still read and used!
 * `-D` `--config-data` -- provide an EDN string that is treated as an additional, final `deps.edn` file
+* `-A` `--aliases` -- specify aliases of any kind (equivalent to specifying `-C`, `-M`, and `-R` all with the same alias)
 * `-C` `--classpath-aliases` -- specify the aliases for classpath additions
+* `-M` `--main-aliases` -- specify the aliases for main options
 * `-R` `--resolve-aliases` -- specify the aliases for resolving dependencies
-* `-A` `--aliases` -- shorthand for specifying `-R` and `-C` with the same alias
+
+The available arguments that are specific to `boot-tools-deps` are:
+
+* `-x` `--execute` -- after processing the `deps.edn` files, run `clojure.main/main` providing as arguments any _main-opts_ found by `tools.deps.alpha`
 * `-B` `--overwrite-boot-deps` -- in addition to setting up the classpath (and `:resource-paths` and `source-paths`), overwrite Boot's `:dependencies` with those returned from `tools.deps` -- note: this is only required for Boot tasks such as `uber` to function correctly!
 * `-Q` `--quick-merge` -- in addition to setting up the classpath etc, perform a quick and simple merge into Boot's `:dependencies` of those returned from `tools.deps` -- note: this is sometimes required for certain Boot tooling to work later on in the pipeline; it cannot be used with `-B` and should not be used with `uber` since it will include all your tooling dependencies as well
-* `-r` `--repeatable` -- use only the local `deps.edn` file (or the `-c` specified files) -- note: the `-D` option is still read and used!
 * `-v` `--verbose` -- explain what the task is doing (`-vv` also makes `tools.deps` verbose)
 
 ### Specifying aliases for tasks in `build.boot`
@@ -58,11 +63,12 @@ And to add the `:test` alias when testing:
 * Whatever value of `:paths` comes back from `tools.deps` is used as the `:resource-paths` value for Boot.
 * Whatever value of `:extra-paths` comes back from `tools.deps` is used as the base `:source-paths` value for Boot. You can use Boot's `sift` task to treat them as resources instead.
 * Any additional folders found on the computed classpath produced by `tools.deps` are added to the `:source-paths` and any JAR files on the computed classpath are added directly to Boot's in-memory classpath. _Boot's `:dependencies` are not updated by default._
+* `clojure.main` is only executed if you specify the `-x` option (`clj` always runs this).
 * In order to run tasks that depend on Boot's `:dependencies`, such as `uber`, you need to specify either the `-B` option to overwrite Boot's `:dependencies` with the computed dependencies produced by `tools.deps` or the `-Q` option to merge the computed dependencies into Boot's `:dependencies`. _Note: transitive dependencies do not inherit the `:scope` of the dependency that caused them to be included!_
 
 ## Changes
 
-* 0.3.1 -- in development -- Destroy pod inline instead of in a future; update to `tools.deps.alpha` 0.5.351.
+* 0.4.0 -- 02/02/2018 -- Destroy pod inline instead of in a future; update to `tools.deps.alpha` 0.5.351; add support for `-M` (main-aliases) and `-x` to execute `clojure.main`.
 * 0.3.0 -- 02/02/2018 -- Add `-Q` (quick merge) for Boot's `:dependencies` to better support certain tool chains (#15); refactor `tools-deps` to match arguments for `load-deps` for easier reuse as a library (#11); update docstrings (to match current usage and explain it better); updated README to better clarify intended usage (#12).
 * 0.2.3 -- 01/31/2018 -- Ensure pod environment gets recent version of Clojure (@superstructor).
 * 0.2.2 -- 01/29/2018 -- Refactor pod code to a separate namespace to make the code easier to work with (@superstructor).

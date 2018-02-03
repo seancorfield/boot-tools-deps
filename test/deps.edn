@@ -1,7 +1,8 @@
 {:paths ["src"]
  :deps {org.clojure/tools.cli {:mvn/version "0.3.5"}}
  :aliases
- {:test {:extra-deps {org.clojure/test.check {:mvn/version "LATEST"
+ {:main-test {:main-opts ["-m" "hello"]}
+  :test {:extra-deps {org.clojure/test.check {:mvn/version "LATEST"
                                               :scope "test"}}
          :extra-paths ["test"]}
   :local-test {:extra-deps {seancorfield/play {:local/root "/Users/sean/clojure"}}}

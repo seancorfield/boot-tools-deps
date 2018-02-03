@@ -1,5 +1,5 @@
 (def project 'seancorfield/boot-tools-deps)
-(def version "0.3.1")
+(def version "0.4.0")
 
 (set-env! :resource-paths #{"resources" "src"}
           :dependencies   '[[org.clojure/clojure "RELEASE" :scope "provided"]
@@ -40,4 +40,5 @@
 
 (comment
   (require '[boot-tools-deps.core :refer [deps]])
+  (boot.core/merge-env! :dependencies '[[org.clojure/tools.deps.alpha "RELEASE"]])
   (boot.core/merge-env! :dependencies '[[proto-repl "RELEASE"]]))
