@@ -1,4 +1,4 @@
-;; Copyright (c) 2017-2018 World Singles llc
+;; copyright (c) 2017-2018 sean corfield
 
 (ns boot-tools-deps.core
   "Set up dependencies from deps.edn files using tools.deps."
@@ -9,6 +9,10 @@
             [clojure.pprint :as pp]
             [clojure.string :as str]
             [clojure.edn :as edn]))
+
+(def ^:private tools-deps-version
+  "The version of tools.deps(.alpha) that we are known to work with."
+  "0.5.373")
 
 (defn- load-default-deps
   "Read our default-deps.edn file and substitute some values.
@@ -41,8 +45,48 @@
                                   [:scope :exclusions :classifier])))
     deps))
 
+(defn- recent-clojure?
+  "Called with a Clojure version string. Returns true if the version is
+  recent enough to run tools.deps.alpha (we assume 1.9.0 because that will
+  likely soon be the minimum required version)."
+  [version]
+  (or (= "LATEST" version)
+      (= "RELEASE" version)
+      (let [[v pre] (str/split version #"-")
+            n-v     (map #(Long/parseLong %) (take 3 (str/split v #"\.")))]
+        (and (<= 1 (first n-v))
+             (<= 9 (second n-v))
+             (or (< 9 (second n-v))
+                 (nil? pre))))))
+
+(defn- ensure-recent-clojure-tools-deps
+  "Given a :dependencies vector, ensure it has a recent enough version of
+  Clojure and our desired version of tools.deps(.alpha).
+
+  This means that we don't force a download of post-1.9.0 Clojure if the
+  user is already depending on that (or a later) version."
+  [dependencies]
+  (let [[deps seen-clj?]
+        (reduce (fn [[deps seen-clj?] [artifact version :as dep]]
+                  (cond (= 'org.clojure/clojure artifact)
+                        (if (recent-clojure? version)
+                          ;; keep it, record we saw it
+                          [(conj deps dep) true]
+                          ;; remove it, we'll re-add it below
+                          [deps seen-clj?])
+                        (= 'org.clojure/tools.deps.alpha artifact)
+                        ;; remove it, we'll re-add it below
+                        [deps seen-clj?]
+                        :else
+                        [(conj deps dep) seen-clj?]))
+                [[] false] dependencies)]
+    ;; add our desired version of tools.deps(.alpha)
+    (cond-> (conj deps ['org.clojure/tools.deps.alpha tools-deps-version])
+      (not seen-clj?) ; add whatever the latest release of Clojure is
+      (conj ['org.clojure/clojure "RELEASE"]))))
+
 (defn- make-pod
-  "Make and return a Boot pod with tools.deps.alpha and the latest Clojure
+  "Make and return a Boot pod with tools.deps.alpha and a recent Clojure
   release (to ensure that tools.deps.alpha will run). The pod will also
   include Boot and boot-tools-deps (since they're both running), as well as
   any other 'runtime' dependencies (which is why it's best to avoid putting
@@ -57,15 +101,9 @@
             (dissoc :boot-class-path :fake-class-path)
             ;; Clojure version in the core Pod (build.boot context)
             ;; is not guaranteed to be recent enough as Boot supports
-            ;; 1.6.0 onwards. Therefore filter out and re-add Clojure
-            ;; dependency.
-            (update :dependencies
-                    (fn [dependencies]
-                      (conj (filter
-                             #(not (= (first %) 'org.clojure/clojure))
-                             dependencies)
-                            '[org.clojure/clojure "RELEASE"]
-                            '[org.clojure/tools.deps.alpha "0.5.351"]))))]
+            ;; 1.6.0 onwards. If it isn't recent enough, we replace it.
+            ;; We also force tools.deps.alpha to a fixed version.
+            (update :dependencies ensure-recent-clojure-tools-deps))]
     (pod/make-pod pod-env)))
 
 (defn- tools-deps

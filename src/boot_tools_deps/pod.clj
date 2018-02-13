@@ -1,17 +1,12 @@
+;; copyright (c) 2017-2018 sean corfield
+
 (ns boot-tools-deps.pod
   "For running tools.deps inside a pod."
   (:require
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.tools.deps.alpha :as deps]
-    [clojure.tools.deps.alpha.reader :as reader]
-    ;; load the various extension points
-    [clojure.tools.deps.alpha.extensions]
-    [clojure.tools.deps.alpha.extensions.deps]
-    [clojure.tools.deps.alpha.extensions.git]
-    [clojure.tools.deps.alpha.extensions.local]
-    [clojure.tools.deps.alpha.extensions.maven]
-    [clojure.tools.deps.alpha.extensions.pom])
+    [clojure.tools.deps.alpha.reader :as reader])
   (:import [java.io File]))
 
 (defn build-environment-map
