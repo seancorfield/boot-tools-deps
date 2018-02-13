@@ -10,7 +10,7 @@ The primary use case for `boot-tools-deps` is that your project runs with `clj` 
 
 You can either add this to your `build.boot` (or `profile.boot`) file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.4.0"]
+    [seancorfield/boot-tools-deps "0.4.1"]
 
 and then expose the task with:
 
@@ -18,7 +18,7 @@ and then expose the task with:
 
 or you can just add it as command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.4.0 deps ...
+    boot -d seancorfield/boot-tools-deps:0.4.1 deps ...
 
 The available arguments that mirror `clj` and `tools.deps.alpha` are:
 
