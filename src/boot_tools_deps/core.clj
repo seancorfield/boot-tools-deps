@@ -38,7 +38,7 @@
     (conj deps
           (transduce cat conj [artifact version]
                      (select-keys info
-                                  [:scope :exclusions])))
+                                  [:scope :exclusions :classifier])))
     deps))
 
 (defn- make-pod
