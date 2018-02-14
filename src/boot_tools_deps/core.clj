@@ -42,7 +42,10 @@
     (conj deps
           (transduce cat conj [artifact version]
                      (select-keys info
-                                  [:scope :exclusions :classifier])))
+                                  [:classifier
+                                   :extension
+                                   :exclusions
+                                   :scope])))
     deps))
 
 (defn- recent-clojure?
