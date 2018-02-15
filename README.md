@@ -10,11 +10,11 @@ The primary use case for `boot-tools-deps` is that your project runs with `clj` 
 
 You can either use this library as a command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.4.1 deps ...
+    boot -d seancorfield/boot-tools-deps:0.4.2 deps ...
 
 or you can add the following to your `profile.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.4.1" :scope "test"]
+    [seancorfield/boot-tools-deps "0.4.2" :scope "test"]
 
 and then expose the task with:
 
@@ -70,7 +70,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
-* 0.4.2 -- (in progress) -- Update to `tools.deps.alpha` 0.5.373; only pull in a more recent version of Clojure for the pod if actually necessary; add `:classifier` and `:extension` to modifiers that `boot-tools-deps` passes back from `tools.deps.alpha` (#20; in addition to `:exclusions` and `:scope` -- @superstructor).
+* 0.4.2 -- 02/14/2018 -- Update to `tools.deps.alpha` 0.5.373; only pull in a more recent version of Clojure for the pod if actually necessary; add `:classifier` and `:extension` to modifiers that `boot-tools-deps` passes back from `tools.deps.alpha` (#20; in addition to `:exclusions` and `:scope` -- @superstructor).
 * 0.4.1 -- 02/02/2018 -- Fix `-D` option (broken in 0.4.0).
 * 0.4.0 -- 02/02/2018 -- Destroy pod inline instead of in a future; update to `tools.deps.alpha` 0.5.351; add support for `-M` (main-aliases) and `-x` to execute `clojure.main`.
 * 0.3.0 -- 02/02/2018 -- Add `-Q` (quick merge) for Boot's `:dependencies` to better support certain tool chains (#15); refactor `tools-deps` to match arguments for `load-deps` for easier reuse as a library (#11); update docstrings (to match current usage and explain it better); updated README to better clarify intended usage (#12).
