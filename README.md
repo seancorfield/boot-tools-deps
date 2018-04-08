@@ -10,11 +10,11 @@ The primary use case for `boot-tools-deps` is that your project runs with `clj` 
 
 You can either use this library as a command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.4.3 deps ...
+    boot -d seancorfield/boot-tools-deps:0.4.4 deps ...
 
 or you can add the following to your `profile.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.4.3" :scope "test"]
+    [seancorfield/boot-tools-deps "0.4.4" :scope "test"]
 
 and then expose the task with:
 
@@ -70,6 +70,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
+* 0.4.4 -- 04/07/2018 -- Update to `tools.deps.alpha` 0.5.417 (which should suppress the slf4j warnings).
 * 0.4.3 -- 02/23/2018 -- Update to `tools.deps.alpha` 0.5.398 (this removes the version range check).
 * 0.4.2 -- 02/14/2018 -- Update to `tools.deps.alpha` 0.5.373; only pull in a more recent version of Clojure for the pod if actually necessary; add `:classifier` and `:extension` to modifiers that `boot-tools-deps` passes back from `tools.deps.alpha` (#20; in addition to `:exclusions` and `:scope` -- @superstructor).
 * 0.4.1 -- 02/02/2018 -- Fix `-D` option (broken in 0.4.0).
