@@ -12,7 +12,7 @@
 
 (def ^:private tools-deps-version
   "The version of tools.deps(.alpha) that we are known to work with."
-  "0.5.398")
+  "0.5417")
 
 (defn- load-default-deps
   "Read our default-deps.edn file and substitute some values.
