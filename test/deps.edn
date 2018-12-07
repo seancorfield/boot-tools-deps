@@ -1,4 +1,5 @@
 {:paths ["src"]
+ :mvn/repos {"stuff" {:url "https://google.com"}}
  :deps {org.clojure/tools.cli {:mvn/version "0.3.5"}}
  :aliases
  {:main-test {:main-opts ["-m" "hello"]}

@@ -113,6 +113,7 @@
   "Run tools.deps inside a pod to produce:
   * :resource-paths -- source code directories from :paths in deps.edn files
   * :source-paths -- additional directories from :extra-paths and classpath
+  * :repositories -- any :mvn/repos from deps.edn files
   * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath
   * :main-opts -- any main-opts pulled from tools.deps.alpha"
@@ -155,7 +156,7 @@
     :as options}]
   (assert (not (and overwrite-boot-deps quick-merge))
           "Cannot use -B and -Q together!")
-  (let [{:keys [resource-paths source-paths
+  (let [{:keys [resource-paths source-paths repositories
                 dependencies classpath]
          :as paths} (tools-deps options)
         boot-libs (reduce-kv libs->boot-deps [] dependencies)]
@@ -172,6 +173,11 @@
         (println "Adding these :source-paths  "
                  (str/join " " source-paths)))
       (boot/merge-env! :source-paths (set source-paths)))
+    (when (seq repositories)
+        (when verbose
+          (println "Adding these :repositories:")
+          (pp/pprint repositories))
+      (boot/merge-env! :repositories repositories))
     (doseq [jar classpath]
       (when verbose
         (println "Adding" jar "to classpath"))

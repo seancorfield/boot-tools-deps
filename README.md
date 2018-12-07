@@ -10,11 +10,11 @@ The primary use case for `boot-tools-deps` is that your project runs with `clj` 
 
 You can either use this library as a command line dependency:
 
-    boot -d seancorfield/boot-tools-deps:0.4.6 deps ...
+    boot -d seancorfield/boot-tools-deps:0.4.7 deps ...
 
 or you can add the following to your `profile.boot` file's `:dependencies`:
 
-    [seancorfield/boot-tools-deps "0.4.6" :scope "test"]
+    [seancorfield/boot-tools-deps "0.4.7" :scope "test"]
 
 and then expose the task with:
 
@@ -70,6 +70,7 @@ And to add the `:test` alias when testing:
 
 ## Changes
 
+* 0.4.7 -- 12/06/2018 -- Merge `:mvn/repos` back to `:repositories` in Boot (to address #24).
 * 0.4.6 -- 10/05/2018 -- Update to `tools.deps.alpha` 0.5.452 (to add authenticated repo support -- @cbowdon).
 * 0.4.5 -- 04/08/2018 -- Update to `tools.deps.alpha` 0.5.417 (which should suppress the slf4j warnings).
 * 0.4.4 -- 04/07/2018 -- **broken release**

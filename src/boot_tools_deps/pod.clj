@@ -13,6 +13,7 @@
   "Run tools.deps to produce:
   * :resource-paths  -- source code directories from :paths in deps.edn files
   * :source-paths -- additional directories from :extra-paths and classpath
+  * :repositories -- any entries from :mvn/repos
   * :dependencies -- vector of Maven coordinates
   * :classpath -- JAR files to add to the classpath
   * :main-opts -- any main-opts pulled from tools.deps.alpha"
@@ -60,6 +61,7 @@
                              (str/split cp cp-separator))]
     {:resource-paths paths
      :source-paths   (set dirs)
+     :repositories   (:mvn/repos deps)
      :dependencies   libs
      :classpath      jars
      :main-opts      main-opts}))
