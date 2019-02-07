@@ -1,8 +1,14 @@
 # boot-tools-deps
 
+See https://github.com/clojure/tools.deps.alpha/wiki/Tools for better tooling based on `tools.deps`/`deps.edn`.
+
+`boot-tools-deps` was designed to allow you to use Boot to perform certain simple Boot tasks on top of an existing, working `deps.edn` project -- prior to the arrival of all that tooling -- such as building an uberjar. It was never intended to allow the full spectrum of Boot tooling to be used (but I think I mistakenly gave that impression in the original README).
+
+## Description
+
 A Boot task that uses `tools.deps(.alpha)` to read in `deps.edn` files in the same way that the `clj` script uses them. Updates Boot's resources, sources, and classpath based on the paths, extra paths, and classpath computed by `tools.deps`. Can also update Boot's dependencies (for use by tasks like `uber`).
 
-The primary use case for `boot-tools-deps` is that your project runs with `clj` -- so all of its dependencies are managed via `deps.edn` files, with aliases as appropriate -- and you want to bring Boot tooling to that project, in addition. If you have an existing Boot project, the assumption is that you move all of the code-level `:dependencies` into `deps.edn` and use aliases in preference to `:scope` in order to manage how dependencies are assembled -- leaving only Boot-level tooling in `:dependencies` or supply those dependencies via the command-line.
+The primary use case for `boot-tools-deps` is that your project runs with `clj` -- so all of its dependencies are managed via `deps.edn` files, with aliases as appropriate -- and you want to bring Boot tooling to that project, in addition. ~If you have an existing Boot project, the assumption is that you move all of the code-level `:dependencies` into `deps.edn` and use aliases in preference to `:scope` in order to manage how dependencies are assembled -- leaving only Boot-level tooling in `:dependencies` or supply those dependencies via the command-line.~ _(This use case only worked for simple Boot projects!)_
 
 [![Clojars Project](https://img.shields.io/clojars/v/seancorfield/boot-tools-deps.svg)](https://clojars.org/seancorfield/boot-tools-deps)
 
